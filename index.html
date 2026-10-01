@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>SOMBRA - Prototipo ASCII</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+        body {
+            background-color: #0d0d11;
+            color: #00ff66;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+        }
+        .mobile-container {
+            width: 100%;
+            max-width: 720px;
+            background: #14141c;
+            border: 2px solid #00ff66;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 0 20px rgba(0, 255, 102, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px dashed #00ff66;
+            padding-bottom: 8px;
+            font-weight: bold;
+        }
+        .status-bar {
+            font-size: 13px;
+            color: #88ffaa;
+            min-height: 20px;
+        }
+        #game-board {
+            background-color: #08080c;
+            border: 1px solid #00aa44;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 15px;
+            line-height: 1.1;
+            letter-spacing: 2px;
+            white-space: pre;
+            overflow-x: auto;
+            cursor: grab;
+            text-align: center;
+        }
+        #game-board:active {
+            cursor: grabbing;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        button {
+            background: #08080c;
+            color: #00ff66;
+            border: 1px solid #00ff66;
+            padding: 8px 16px;
+            font-family: inherit;
+            font-size: 13px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #00ff66;
+            color: #0d0d11;
+        }
+        .char-player { color: #ffffff; font-weight: bold; text-shadow: 0 0 5px #fff; }
+        .char-shadow-drag { color: #ff00ff; text-shadow: 0 0 5px #ff00ff; }
+        .char-shadow-solid { color: #00ffff; font-weight: bold; text-shadow: 0 0 5px #00ffff; }
+        .char-laser { color: #ff3333; font-weight: bold; text-shadow: 0 0 6px #ff0000; }
+        .char-door { color: #ffff00; font-weight: bold; text-shadow: 0 0 5px #ffff00; }
+        .char-switch { color: #ffaa00; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="mobile-container">
+    <div class="header">
+        <span id="level-title">NIVEL 1</span>
+        <span id="timer-display">SOMBRA: LISTA</span>
+    </div>
+
+    <div class="status-bar" id="status-text">
+        Gestos: Mantén pulsado y arrastra para colocar la sombra.
+    </div>
+
+    <div id="game-board"></div>
+
+    <div class="controls">
+        <button onclick="resetLevel()">Reiniciar Nivel</button>
+        <button onclick="changeLevel(-1)">◄ Anterior</button>
+        <button onclick="changeLevel(1)">Siguiente ►</button>
+    </div>
+</div>
+
+<script>
+const LEVELS = [
+    // Nivel 1 — La Sombra
+    {
+        title: "NIVEL 1 — La Sombra",
+        info: "Coloca la sombra antes del escalón para elevarte y llegar a la puerta.",
+        map: [
+            "########################################",
+            "#                                     >#",
+            "#   *                        ##########",
+            "#   █████████████████████████##########",
+            "########################################"
+        ],
+        startX: 4, startY: 2
+    },
+    // Nivel 2 — El Hueco
+    {
+        title: "NIVEL 2 — El Hueco",
+        info: "Arrastra la sombra hacia el foso y suéltala a tiempo para cruzar.",
+        map: [
+            "########################################",
+            "#                                      #",
+            "#   *                                 >#",
+            "#   ███████████          ██████████████#",
+            "#              \________/              #",
+            "########################################"
+        ],
+        startX: 4, startY: 2
+    },
+    // Nivel 3 — La Altura (CORREGIDO Y SUPERABLE)
+    {
+        title: "NIVEL 3 — La Altura",
+        info: "Coloca la sombra frente al muro alto para usarla de escalón y superarlo.",
+        map: [
+            "########################################",
+            "#                                     >#",
+            "#                    ██                #",
+            "#   *                ██                #",
+            "#   ███████████████████████████████████#",
+            "########################################"
+        ],
+        startX: 4, startY: 3
+    },
+    // Nivel 4 — El Peligro
+    {
+        title: "NIVEL 4 — El Peligro",
+        info: "Interpón la sombra bajo el emisor láser (V) para bloquear el rayo.",
+        map: [
+            "########################################",
+            "#                    V                 #",
+            "#                                      #",
+            "#   *                                 >#",
+            "#   ███████████████████████████████████#",
+            "########################################"
+        ],
+        startX: 4, startY: 3
+    },
+    // Nivel 5 — El Interruptor
+    {
+        title: "NIVEL 5 — El Interruptor",
+        info: "Activa el interruptor 'O' con la sombra para abrir 'D', y luego bloquea el láser 'V'.",
+        map: [
+            "########################################",
+            "#                         V            #",
+            "#                                      #",
+            "#   *         O                       D#",
+            "#   ███████████████████████████████████#",
+            "########################################"
+        ],
+        startX: 4, startY: 3
+    }
+];
+
+let currentLevelIdx = 0;
+let grid = [];
+let player = { x: 0, y: 0, vx: 0.08 };
+let shadow = {
+    isDragging: false,
+    isSolid: false,
+    dragX: 0, dragY: 0,
+    solidX: 0, solidY: 0,
+    timer: 0,
+    maxTime: 3.5
+};
+let doorOpen = false;
+let isChangingLevel = false;
+let lastTime = performance.now();
+
+const boardElem = document.getElementById('game-board');
+const titleElem = document.getElementById('level-title');
+const statusElem = document.getElementById('status-text');
+const timerElem = document.getElementById('timer-display');
+
+function loadLevel(idx) {
+    currentLevelIdx = idx;
+    const lvl = LEVELS[idx];
+    titleElem.innerText = lvl.title;
+    statusElem.innerText = lvl.info;
+    
+    grid = lvl.map.map(row => row.split(''));
+    player.x = lvl.startX;
+    player.y = lvl.startY;
+    player.vx = 0.08;
+    
+    shadow.isDragging = false;
+    shadow.isSolid = false;
+    shadow.timer = 0;
+    doorOpen = false;
+    isChangingLevel = false;
+}
+
+function resetLevel() {
+    loadLevel(currentLevelIdx);
+}
+
+function changeLevel(dir) {
+    let next = currentLevelIdx + dir;
+    if (next < 0) next = LEVELS.length - 1;
+    if (next >= LEVELS.length) next = 0;
+    loadLevel(next);
+}
+
+function getGridCoords(e) {
+    const rect = boardElem.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    
+    const relX = (clientX - rect.left) / rect.width;
+    const relY = (clientY - rect.top) / rect.height;
+    
+    const cols = grid[0].length;
+    const rows = grid.length;
+    
+    return {
+        gx: Math.floor(relX * cols),
+        gy: Math.floor(relY * rows)
+    };
+}
+
+function startDrag(e) {
+    e.preventDefault();
+    const coords = getGridCoords(e);
+    shadow.isDragging = true;
+    shadow.dragX = coords.gx;
+    shadow.dragY = coords.gy;
+}
+
+function moveDrag(e) {
+    if (!shadow.isDragging) return;
+    e.preventDefault();
+    const coords = getGridCoords(e);
+    shadow.dragX = coords.gx;
+    shadow.dragY = coords.gy;
+}
+
+function endDrag(e) {
+    if (!shadow.isDragging) return;
+    shadow.isDragging = false;
+    
+    shadow.isSolid = true;
+    shadow.solidX = shadow.dragX;
+    shadow.solidY = shadow.dragY;
+    shadow.timer = shadow.maxTime;
+}
+
+boardElem.addEventListener('mousedown', startDrag);
+window.addEventListener('mousemove', moveDrag);
+window.addEventListener('mouseup', endDrag);
+
+boardElem.addEventListener('touchstart', startDrag);
+window.addEventListener('touchmove', moveDrag);
+window.addEventListener('touchend', endDrag);
+
+function checkVictory() {
+    let px = Math.floor(player.x);
+    let py = Math.floor(player.y);
+    
+    for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+            let cx = px + dx;
+            let cy = py + dy;
+            if (cy >= 0 && cy < grid.length && cx >= 0 && cx < grid[0].length) {
+                let tile = grid[cy][cx];
+                if (tile === '>' || (tile === 'D' && doorOpen)) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+function update(dt) {
+    if (isChangingLevel) return;
+
+    if (shadow.isSolid) {
+        shadow.timer -= dt;
+        if (shadow.timer <= 0) {
+            shadow.isSolid = false;
+            shadow.timer = 0;
+        }
+    }
+
+    if (shadow.isSolid) {
+        timerElem.innerText = `SOMBRA: ${shadow.timer.toFixed(1)}s`;
+    } else if (shadow.isDragging) {
+        timerElem.innerText = `SOMBRA: ARRASTRANDO`;
+    } else {
+        timerElem.innerText = `SOMBRA: LISTA`;
+    }
+
+    // Comprobar interruptor (Nivel 5)
+    let px = Math.floor(player.x);
+    let py = Math.floor(player.y);
+    if (grid[py] && grid[py][px] === 'O') doorOpen = true;
+
+    if (shadow.isSolid) {
+        for (let dx = -1; dx <= 1; dx++) {
+            let sx = shadow.solidX + dx;
+            let sy = shadow.solidY;
+            if (sy >= 0 && sy < grid.length && sx >= 0 && sx < grid[0].length) {
+                if (grid[sy][sx] === 'O') doorOpen = true;
+            }
+        }
+    }
+
+    // Movimiento del personaje
+    let nextX = player.x + player.vx;
+    let gridX = Math.floor(nextX);
+    let gridY = Math.floor(player.y);
+
+    if (isSolidTile(gridX + 1, gridY)) {
+        if (!isSolidTile(gridX + 1, gridY - 1) && !isSolidTile(gridX, gridY - 1)) {
+            player.y -= 1.0;
+            player.x = nextX;
+        }
+    } else {
+        player.x = nextX;
+    }
+
+    // Gravedad
+    let feetY = Math.floor(player.y + 1);
+    let currentFeetX = Math.floor(player.x);
+    if (!isSolidTile(currentFeetX, feetY)) {
+        player.y += 0.12;
+    } else {
+        player.y = Math.floor(player.y);
+    }
+
+    // Caída
+    if (player.y >= grid.length - 1) {
+        resetLevel();
+        return;
+    }
+
+    // Impacto con láser
+    if (isLaserTile(Math.floor(player.x), Math.floor(player.y))) {
+        resetLevel();
+        return;
+    }
+
+    // Victoria
+    if (checkVictory()) {
+        isChangingLevel = true;
+        if (currentLevelIdx < LEVELS.length - 1) {
+            setTimeout(() => { changeLevel(1); }, 200);
+        } else {
+            statusElem.innerText = "¡JUEGO COMPLETADO! Has dominado todos los usos de la sombra.";
+            player.vx = 0;
+        }
+    }
+}
+
+function isSolidTile(x, y) {
+    if (y < 0 || y >= grid.length || x < 0 || x >= grid[0].length) return true;
+    let tile = grid[y][x];
+    if (tile === '█' || tile === '#' || tile === '\\' || tile === '/') return true;
+    
+    if (shadow.isSolid) {
+        if (y === shadow.solidY && x >= shadow.solidX - 1 && x <= shadow.solidX + 1) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function isLaserTile(x, y) {
+    for (let r = 0; r < grid.length; r++) {
+        for (let c = 0; c < grid[0].length; c++) {
+            if (grid[r][c] === 'V') {
+                for (let ly = r + 1; ly < grid.length; ly++) {
+                    if (isSolidTile(c, ly)) break;
+                    if (c === x && ly === y) return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+function render() {
+    let display = [];
+    for (let r = 0; r < grid.length; r++) {
+        display[r] = [...grid[r]];
+    }
+
+    // Renderizar láseres verticales descendentes
+    for (let r = 0; r < grid.length; r++) {
+        for (let c = 0; c < grid[0].length; c++) {
+            if (grid[r][c] === 'V') {
+                for (let ly = r + 1; ly < grid.length; ly++) {
+                    if (isSolidTile(c, ly)) break;
+                    display[ly][c] = '|';
+                }
+            }
+        }
+    }
+
+    // Estado de puerta en Nivel 5
+    for (let r = 0; r < grid.length; r++) {
+        for (let c = 0; c < grid[0].length; c++) {
+            if (display[r][c] === 'D') {
+                display[r][c] = doorOpen ? '>' : '║';
+            }
+        }
+    }
+
+    // Sombra solidificada
+    if (shadow.isSolid) {
+        let sy = shadow.solidY;
+        for (let dx = -1; dx <= 1; dx++) {
+            let sx = shadow.solidX + dx;
+            if (sy >= 0 && sy < grid.length && sx >= 0 && sx < grid[0].length) {
+                display[sy][sx] = '█';
+            }
+        }
+    }
+
+    // Sombra en arrastre
+    if (shadow.isDragging) {
+        let sy = shadow.dragY;
+        for (let dx = -1; dx <= 1; dx++) {
+            let sx = shadow.dragX + dx;
+            if (sy >= 0 && sy < grid.length && sx >= 0 && sx < grid[0].length) {
+                display[sy][sx] = '░';
+            }
+        }
+    }
+
+    // Personaje
+    let px = Math.floor(player.x);
+    let py = Math.floor(player.y);
+    if (py >= 0 && py < grid.length && px >= 0 && px < grid[0].length) {
+        display[py][px] = '*';
+    }
+
+    let htmlOutput = display.map((row, r) => {
+        return row.map((ch, c) => {
+            if (r === py && c === px) return `<span class="char-player">*</span>`;
+            if (shadow.isDragging && r === shadow.dragY && Math.abs(c - shadow.dragX) <= 1) {
+                return `<span class="char-shadow-drag">░</span>`;
+            }
+            if (shadow.isSolid && r === shadow.solidY && Math.abs(c - shadow.solidX) <= 1) {
+                return `<span class="char-shadow-solid">█</span>`;
+            }
+            if (ch === '|') return `<span class="char-laser">|</span>`;
+            if (ch === 'V') return `<span class="char-laser">V</span>`;
+            if (ch === '>' || ch === 'D' || ch === '║') return `<span class="char-door">${ch}</span>`;
+            if (ch === 'O') return `<span class="char-switch">O</span>`;
+            return ch;
+        }).join('');
+    }).join('\n');
+
+    boardElem.innerHTML = htmlOutput;
+}
+
+function gameLoop(timestamp) {
+    let dt = (timestamp - lastTime) / 1000;
+    if (dt > 0.1) dt = 0.1;
+    lastTime = timestamp;
+
+    update(dt);
+    render();
+
+    requestAnimationFrame(gameLoop);
+}
+
+loadLevel(0);
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
