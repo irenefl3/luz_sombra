@@ -118,13 +118,13 @@
 const LEVELS = [
     // Nivel 1 — Doble Escalón
     {
-        title: "NIVEL 1 — Doble Obstáculo",
-        info: "Debes colocar la sombra con precisión entre ambos muros para superar la doble altura.",
+        title: "NIVEL 1 — Doble Escalón",
+        info: "Usa la sombra como escalón intermedio para superar el obstáculo.",
         map: [
             "########################################",
-            "#                                     >#",
-            "#                  ██        ████      #",
-            "#   *              ██        ████      #",
+            "#                                      #",
+            "#                              ██     >#",
+            "#   *                          ██   ###",
             "#   ███████████████████████████████████#",
             "########################################"
         ],
@@ -144,15 +144,15 @@ const LEVELS = [
         ],
         startX: 4, startY: 2
     },
-    // Nivel 3 — Escalada de Muros
+    // Nivel 3 — Escalada de Muros (CORREGIDO Y PASABLE)
     {
-        title: "NIVEL 3 — La Torre",
-        info: "Un muro de 3 bloques de alto. Coloca la sombra a altura intermedia para trepar.",
+        title: "NIVEL 3 — Doble Torre",
+        info: "Coloca la sombra como escalón previo ante cada muro para treparlos.",
         map: [
             "########################################",
-            "#                                 ██  >#",
-            "#                    ██           ██   #",
-            "#   *                ██           ██   #",
+            "#                                      #",
+            "#                  ██          ██     >#",
+            "#   *              ██          ██   ###",
             "#   ███████████████████████████████████#",
             "########################################"
         ],
@@ -161,7 +161,7 @@ const LEVELS = [
     // Nivel 4 — Cortina Láser
     {
         title: "NIVEL 4 — Campo Minado Láser",
-        info: "Dos láseres seguidos. Tienes tiempo exacto para bloquear uno y cruzar el otro.",
+        info: "Dos láseres seguidos. Coloca la sombra bajo el rayo para bloquearlo.",
         map: [
             "########################################",
             "#               V           V          #",
@@ -172,7 +172,7 @@ const LEVELS = [
         ],
         startX: 4, startY: 3
     },
-    // Nivel 5 — La Prueba Final
+    // Nivel 5 — El Guantelete
     {
         title: "NIVEL 5 — El Guantelete",
         info: "Activa el interruptor 'O', cruza el foso y bloquea el láser 'V' antes de salir.",
@@ -383,7 +383,7 @@ function update(dt) {
         if (currentLevelIdx < LEVELS.length - 1) {
             setTimeout(() => { changeLevel(1); }, 200);
         } else {
-            statusElem.innerText = "¡JUEGO COMPLETADO! Has superado todos los niveles complejos.";
+            statusElem.innerText = "¡JUEGO COMPLETADO! Has superado todos los niveles.";
             player.vx = 0;
         }
     }
