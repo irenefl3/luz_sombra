@@ -116,71 +116,73 @@
 
 <script>
 const LEVELS = [
-    // Nivel 1 — La Sombra
+    // Nivel 1 — Doble Escalón
     {
-        title: "NIVEL 1 — La Sombra",
-        info: "Coloca la sombra antes del escalón para elevarte y llegar a la puerta.",
+        title: "NIVEL 1 — Doble Obstáculo",
+        info: "Debes colocar la sombra con precisión entre ambos muros para superar la doble altura.",
         map: [
             "########################################",
             "#                                     >#",
-            "#   *                        ##########",
-            "#   █████████████████████████##########",
+            "#                  ██        ████      #",
+            "#   *              ██        ████      #",
+            "#   ███████████████████████████████████#",
             "########################################"
         ],
-        startX: 4, startY: 2
+        startX: 4, startY: 3
     },
-    // Nivel 2 — El Hueco
+    // Nivel 2 — Doble Foso
     {
-        title: "NIVEL 2 — El Hueco",
-        info: "Arrastra la sombra hacia el foso y suéltala a tiempo para cruzar.",
+        title: "NIVEL 2 — El Abismo Doble",
+        info: "Supera el primer abismo a tiempo para reutilizar la sombra en el segundo.",
         map: [
             "########################################",
             "#                                      #",
             "#   *                                 >#",
+            "#   ████████       ████████      ██████#",
+            "#           \_____/        \____/      #",
+            "########################################"
+        ],
+        startX: 4, startY: 2
+    },
+    // Nivel 3 — Escalada de Muros
+    {
+        title: "NIVEL 3 — La Torre",
+        info: "Un muro de 3 bloques de alto. Coloca la sombra a altura intermedia para trepar.",
+        map: [
+            "########################################",
+            "#                                 ██  >#",
+            "#                    ██           ██   #",
+            "#   *                ██           ██   #",
+            "#   ███████████████████████████████████#",
+            "########################################"
+        ],
+        startX: 4, startY: 3
+    },
+    // Nivel 4 — Cortina Láser
+    {
+        title: "NIVEL 4 — Campo Minado Láser",
+        info: "Dos láseres seguidos. Tienes tiempo exacto para bloquear uno y cruzar el otro.",
+        map: [
+            "########################################",
+            "#               V           V          #",
+            "#                                      #",
+            "#   *                                 >#",
+            "#   ███████████████████████████████████#",
+            "########################################"
+        ],
+        startX: 4, startY: 3
+    },
+    // Nivel 5 — La Prueba Final
+    {
+        title: "NIVEL 5 — El Guantelete",
+        info: "Activa el interruptor 'O', cruza el foso y bloquea el láser 'V' antes de salir.",
+        map: [
+            "########################################",
+            "#                          V           #",
+            "#                                      #",
+            "#   *    O                            D#",
             "#   ███████████          ██████████████#",
             "#              \________/              #",
-            "########################################"
-        ],
-        startX: 4, startY: 2
-    },
-    // Nivel 3 — La Altura (CORREGIDO Y SUPERABLE)
-    {
-        title: "NIVEL 3 — La Altura",
-        info: "Coloca la sombra frente al muro alto para usarla de escalón y superarlo.",
-        map: [
-            "########################################",
-            "#                                     >#",
-            "#                    ██                #",
-            "#   *                ██                #",
-            "#   ███████████████████████████████████#",
-            "########################################"
-        ],
-        startX: 4, startY: 3
-    },
-    // Nivel 4 — El Peligro
-    {
-        title: "NIVEL 4 — El Peligro",
-        info: "Interpón la sombra bajo el emisor láser (V) para bloquear el rayo.",
-        map: [
-            "########################################",
-            "#                    V                 #",
-            "#                                      #",
-            "#   *                                 >#",
-            "#   ███████████████████████████████████#",
-            "########################################"
-        ],
-        startX: 4, startY: 3
-    },
-    // Nivel 5 — El Interruptor
-    {
-        title: "NIVEL 5 — El Interruptor",
-        info: "Activa el interruptor 'O' con la sombra para abrir 'D', y luego bloquea el láser 'V'.",
-        map: [
-            "########################################",
-            "#                         V            #",
-            "#                                      #",
-            "#   *         O                       D#",
-            "#   ███████████████████████████████████#",
             "########################################"
         ],
         startX: 4, startY: 3
@@ -381,7 +383,7 @@ function update(dt) {
         if (currentLevelIdx < LEVELS.length - 1) {
             setTimeout(() => { changeLevel(1); }, 200);
         } else {
-            statusElem.innerText = "¡JUEGO COMPLETADO! Has dominado todos los usos de la sombra.";
+            statusElem.innerText = "¡JUEGO COMPLETADO! Has superado todos los niveles complejos.";
             player.vx = 0;
         }
     }
